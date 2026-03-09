@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ConsoleApp.Extensions
 {
@@ -88,6 +89,27 @@ namespace ConsoleApp.Extensions
             }
 
             return builder.ToString();
+        }
+
+        // searches for and destroys malicious tags from HTML
+        public static string Sanitize(this string content)
+        {
+            // Replace the malicious tags with nothing.
+            var maliciousTagsPattern =
+            @"<(applet|embed|frameset|head|noframes|noscript|object|
+            form|select|option|script|style|title)(.*?)>"+
+            "((.|\n)*?)"+
+            "</(applet|embed|frameset|head|noframes|noscript|object|select|form|option|script|style|title)>";
+
+            var options = RegexOptions.IgnoreCase | RegexOptions.Multiline;
+            var regex = new Regex(maliciousTagsPattern, options);
+            content = regex.Replace(content, @"");
+            // Remove the Javascript function on the tags (i.e. OnChange="Javascript:<blah blah blah>")
+            var inlinePattern = @"<[^>]*=""javascript:[^""]*""[^>]*>";
+            options = RegexOptions.IgnoreCase;
+            
+            var regex2 = new Regex(inlinePattern, options);
+            return regex2.Replace(content, @"");
         }
 
     }
